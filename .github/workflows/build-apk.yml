@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,3 +31,23 @@ jobs:
           name: app-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-debug-apk
+          path: dist
+
+      - name: Publish rolling latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv dist/app-debug.apk dist/EngStudy-debug.apk
+          NOTES="Rolling debug build from main. Commit ${GITHUB_SHA}, $(date -u +%Y-%m-%dT%H:%MZ)"
+          gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create latest --repo "$GITHUB_REPOSITORY" --title "Latest build" --notes "$NOTES"
+          gh release edit latest --repo "$GITHUB_REPOSITORY" --notes "$NOTES"
+          gh release upload latest dist/EngStudy-debug.apk --repo "$GITHUB_REPOSITORY" --clobber
