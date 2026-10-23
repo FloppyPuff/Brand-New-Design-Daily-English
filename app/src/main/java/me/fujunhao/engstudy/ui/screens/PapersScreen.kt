@@ -1,5 +1,6 @@
 package me.fujunhao.engstudy.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,7 +30,11 @@ import me.fujunhao.engstudy.ui.glass.GlassChip
 import me.fujunhao.engstudy.ui.glass.GlassPillButton
 
 @Composable
-fun PapersScreen(backdrop: Backdrop, viewModel: PapersViewModel = hiltViewModel()) {
+fun PapersScreen(
+    backdrop: Backdrop,
+    onOpenPaper: (String) -> Unit = {},
+    viewModel: PapersViewModel = hiltViewModel(),
+) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val practiced = ui.paperIndex.count { set -> paperDone(ui.progress, set.id) }
 
@@ -67,7 +72,7 @@ fun PapersScreen(backdrop: Backdrop, viewModel: PapersViewModel = hiltViewModel(
                 }
             }
             else -> items(ui.paperIndex.size) { index ->
-                PaperCard(backdrop, ui.paperIndex[index], ui.progress)
+                PaperCard(backdrop, ui.paperIndex[index], ui.progress) { onOpenPaper(ui.paperIndex[index].id) }
             }
         }
     }
@@ -85,7 +90,12 @@ private fun paperMeta(set: PaperIndexDto): String = listOfNotNull(
 ).joinToString(" · ")
 
 @Composable
-private fun PaperCard(backdrop: Backdrop, set: PaperIndexDto, progress: AppState) {
+private fun PaperCard(
+    backdrop: Backdrop,
+    set: PaperIndexDto,
+    progress: AppState,
+    onClick: () -> Unit,
+) {
     val records = progress.papers.filterKeys { it.startsWith("${set.id}#") }.values
     val total = records.sumOf { it.total }
     val correct = records.sumOf { it.correct }
@@ -94,7 +104,7 @@ private fun PaperCard(backdrop: Backdrop, set: PaperIndexDto, progress: AppState
         records.any { it.rating.isNotBlank() } -> "已理解"
         else -> "未开始"
     }
-    GlassCard(backdrop) {
+    GlassCard(backdrop, modifier = Modifier.clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
