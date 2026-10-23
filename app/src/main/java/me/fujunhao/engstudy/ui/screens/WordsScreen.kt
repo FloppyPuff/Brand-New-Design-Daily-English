@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,6 +60,22 @@ fun WordsScreen(backdrop: Backdrop, viewModel: StudyViewModel = hiltViewModel())
                 )
             }
         }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassPillButton(
+                    "复习",
+                    { viewModel.startSession("new") },
+                    backdrop,
+                    prominent = ui.wordMode != "spell",
+                )
+                GlassPillButton(
+                    "拼写自测",
+                    { viewModel.startSession("spell") },
+                    backdrop,
+                    prominent = ui.wordMode == "spell",
+                )
+            }
+        }
         when {
             ui.loading -> item {
                 GlassCard(backdrop) {
@@ -72,6 +90,24 @@ fun WordsScreen(backdrop: Backdrop, viewModel: StudyViewModel = hiltViewModel())
                         viewModel::reload,
                         backdrop,
                         modifier = Modifier.padding(top = 14.dp),
+                    )
+                }
+            }
+            word != null && ui.wordMode == "spell" -> {
+                item {
+                    SpellCard(
+                        backdrop = backdrop,
+                        word = word,
+                        position = ui.wordIndex + 1,
+                        total = ui.wordQueue.size,
+                        input = ui.spellingInput,
+                        checked = ui.spellingChecked,
+                        correct = ui.spellingCorrect,
+                        onInput = viewModel::setSpellingInput,
+                        onCheck = viewModel::checkSpelling,
+                        onNext = {
+                            viewModel.rateWord(if (ui.spellingCorrect == true) "good" else "again")
+                        },
                     )
                 }
             }
@@ -188,6 +224,68 @@ private fun ReviewCard(
             GlassPillButton("模糊", { onRate("hard") }, backdrop)
             GlassPillButton("认识", { onRate("good") }, backdrop, prominent = true)
         }
+    }
+}
+
+@Composable
+private fun SpellCard(
+    backdrop: Backdrop,
+    word: WordDto,
+    position: Int,
+    total: Int,
+    input: String,
+    checked: Boolean,
+    correct: Boolean?,
+    onInput: (String) -> Unit,
+    onCheck: () -> Unit,
+    onNext: () -> Unit,
+) {
+    GlassCard(backdrop) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "第 $position / $total 词 · 看中文拼单词",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                word.pos.orEmpty(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Text(
+            word.meaning,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 10.dp),
+        )
+        OutlinedTextField(
+            value = input,
+            onValueChange = onInput,
+            placeholder = { Text("拼写这个单词") },
+            singleLine = true,
+            shape = RoundedCornerShape(18.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        )
+        if (checked) {
+            Text(
+                if (correct == true) "拼写正确" else "正确拼写：${word.id}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (correct == true) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
+                modifier = Modifier.padding(top = 10.dp),
+            )
+        }
+        GlassPillButton(
+            if (checked) "下一个" else "检查",
+            if (checked) onNext else onCheck,
+            backdrop,
+            prominent = true,
+            modifier = Modifier.padding(top = 16.dp),
+        )
     }
 }
 

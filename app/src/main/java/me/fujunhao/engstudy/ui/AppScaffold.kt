@@ -29,6 +29,7 @@ import me.fujunhao.engstudy.ui.glass.LiquidTabBar
 import me.fujunhao.engstudy.ui.glass.LiquidTabSpec
 import me.fujunhao.engstudy.ui.icons.AppIcons
 import me.fujunhao.engstudy.ui.screens.AuthScreen
+import me.fujunhao.engstudy.ui.screens.FocusScreen
 import me.fujunhao.engstudy.ui.screens.NotebookScreen
 import me.fujunhao.engstudy.ui.screens.PaperPracticeScreen
 import me.fujunhao.engstudy.ui.screens.PapersScreen
@@ -45,6 +46,7 @@ private sealed interface AppRoute {
     data class Practice(val setId: String) : AppRoute
     data object Notebook : AppRoute
     data object Stats : AppRoute
+    data object Focus : AppRoute
 }
 
 @Composable
@@ -92,6 +94,7 @@ fun AppScaffold() {
                         onSettings = { route = AppRoute.Settings },
                         onNotebook = { route = AppRoute.Notebook },
                         onStats = { route = AppRoute.Stats },
+                        onFocus = { route = AppRoute.Focus },
                     )
                 }
                 AppRoute.Auth -> AuthScreen(
@@ -108,6 +111,10 @@ fun AppScaffold() {
                     )
                 }
                 AppRoute.Notebook -> NotebookScreen(
+                    backdrop = backdrop,
+                    onBack = { route = AppRoute.Root },
+                )
+                AppRoute.Focus -> FocusScreen(
                     backdrop = backdrop,
                     onBack = { route = AppRoute.Root },
                 )

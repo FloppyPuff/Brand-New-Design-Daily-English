@@ -45,6 +45,7 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onNotebook: () -> Unit = {},
     onStats: () -> Unit = {},
+    onFocus: () -> Unit = {},
     studyViewModel: StudyViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -110,7 +111,7 @@ fun ProfileScreen(
         }
         item {
             GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
-                EntryRow("专注计时", "累计 ${stats?.totalMinutes ?: 0} 分钟（迁移中）") {}
+                EntryRow("专注计时", "累计 ${stats?.totalMinutes ?: 0} 分钟") { onFocus() }
                 EntryRow("同步", syncLabel, settingsViewModel::syncNow)
                 EntryRow("设置", "学习计划、账号与同步") { onSettings() }
             }
