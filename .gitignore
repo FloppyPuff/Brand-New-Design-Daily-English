@@ -8,3 +8,5 @@ captures/
 .externalNativeBuild/
 .cxx/
 build.log
+shot_*.png
+crop_*.png

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
+import me.fujunhao.engstudy.ui.GlassDebug
 import me.fujunhao.engstudy.ui.icons.AppIcons
 
 @Composable
@@ -38,7 +39,7 @@ fun GlassCard(
 ) {
     Column(
         modifier = modifier
-            .glass(backdrop)
+            .glass(backdrop, enabled = !GlassDebug.flatPages)
             .padding(contentPadding),
         content = content,
     )
@@ -70,6 +71,7 @@ fun GlassPillButton(
                 tint = tint,
                 highlight = if (prominent) null else glassHighlight(),
                 shadow = if (prominent) null else glassShadow(),
+                enabled = !GlassDebug.flatPages,
             )
             .clickable(onClick = onClick)
             .height(44.dp)
@@ -107,7 +109,7 @@ fun GlassPillField(
 ) {
     Row(
         modifier = modifier
-            .glass(backdrop, shape = RoundedCornerShape(50))
+            .glass(backdrop, shape = RoundedCornerShape(50), enabled = !GlassDebug.flatPages)
             .height(56.dp)
             .padding(start = 18.dp, end = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -207,6 +209,7 @@ fun GlassChip(text: String, backdrop: Backdrop, modifier: Modifier = Modifier) {
                 blurRadius = 12.dp,
                 highlight = null,
                 shadow = null,
+                enabled = !GlassDebug.flatPages,
             )
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {

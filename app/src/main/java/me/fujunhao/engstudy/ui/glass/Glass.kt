@@ -1,5 +1,6 @@
 package me.fujunhao.engstudy.ui.glass
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
+import me.fujunhao.engstudy.ui.GlassDebug
 
 /** Central glass parameters: tune the whole app's liquid-glass look here. */
 object GlassSpec {
@@ -52,6 +54,13 @@ fun glassShadow(): Shadow =
  * The one glass surface modifier every component builds on.
  * Samples the content recorded into [backdrop] (see Modifier.layerBackdrop),
  * blurs + refracts it, then lays tint / highlight / shadow on top.
+ *
+ * IMPORTANT: a layer-sampling surface must NOT live inside the subtree that
+ * Modifier.layerBackdrop records. On Android 17 (hwui/Vulkan) drawing a
+ * GraphicsLayer while that same layer is being recorded creates a cyclic
+ * RenderNode, and prepareTreeImpl recurses until RenderThread stack-overflows
+ * (SIGSEGV). Hence pages render flat surfaces ([enabled] = false when
+ * GlassDebug.flatPages) and only floating controls (tab bar) sample the layer.
  */
 @Composable
 fun Modifier.glass(
@@ -63,17 +72,27 @@ fun Modifier.glass(
     highlight: Highlight? = glassHighlight(),
     shadow: Shadow? = glassShadow(),
     extraSurface: (DrawScope.() -> Unit)? = null,
-): Modifier = this.drawBackdrop(
-    backdrop = backdrop,
-    shape = { shape },
-    effects = {
-        blur(blurRadius.toPx())
-        lens(GlassSpec.RefractionHeight.toPx(), refractionAmount)
-    },
-    highlight = { highlight },
-    shadow = { shadow },
-    onDrawSurface = {
-        drawRect(tint)
-        extraSurface?.invoke(this)
-    },
-)
+    enabled: Boolean = true,
+): Modifier {
+    if (!enabled || GlassDebug.mode == GlassDebug.Mode.OFF) {
+        return this.background(tint, shape)
+    }
+    return this.drawBackdrop(
+        backdrop = backdrop,
+        shape = { shape },
+        effects = {
+            if (GlassDebug.useBlur) {
+                blur(blurRadius.toPx())
+            }
+            if (GlassDebug.useLens) {
+                lens(GlassSpec.RefractionHeight.toPx(), refractionAmount)
+            }
+        },
+        highlight = { highlight },
+        shadow = { shadow },
+        onDrawSurface = {
+            drawRect(tint)
+            extraSurface?.invoke(this)
+        },
+    )
+}
