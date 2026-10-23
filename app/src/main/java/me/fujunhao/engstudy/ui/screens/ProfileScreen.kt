@@ -41,6 +41,8 @@ import me.fujunhao.engstudy.ui.icons.AppIcons
 fun ProfileScreen(
     backdrop: Backdrop,
     versionName: String = "0.2.0",
+    onLogin: () -> Unit = {},
+    onSettings: () -> Unit = {},
     studyViewModel: StudyViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -79,6 +81,7 @@ fun ProfileScreen(
                 backdrop = backdrop,
                 email = email,
                 syncing = settings.sync.status == SyncStatus.SAVING,
+                onLogin = onLogin,
                 onLogout = settingsViewModel::logout,
             )
         }
@@ -107,7 +110,7 @@ fun ProfileScreen(
             GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
                 EntryRow("专注计时", "累计 ${stats?.totalMinutes ?: 0} 分钟（迁移中）") {}
                 EntryRow("同步", syncLabel, settingsViewModel::syncNow)
-                EntryRow("设置", "强调色、账号与关于（迁移中）") {}
+                EntryRow("设置", "学习计划、账号与同步") { onSettings() }
             }
         }
         if (settings.message.isNotBlank()) {
@@ -136,6 +139,7 @@ private fun AccountCard(
     backdrop: Backdrop,
     email: String?,
     syncing: Boolean,
+    onLogin: () -> Unit,
     onLogout: () -> Unit,
 ) {
     GlassCard(backdrop) {
@@ -168,8 +172,8 @@ private fun AccountCard(
         }
         if (email == null) {
             GlassPillButton(
-                text = "登录或注册（迁移中）",
-                onClick = {},
+                text = "登录或注册",
+                onClick = onLogin,
                 backdrop = backdrop,
                 prominent = true,
                 modifier = Modifier.padding(top = 16.dp),

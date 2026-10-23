@@ -1,5 +1,6 @@
 package me.fujunhao.engstudy.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,14 +28,24 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import me.fujunhao.engstudy.ui.glass.LiquidTabBar
 import me.fujunhao.engstudy.ui.glass.LiquidTabSpec
 import me.fujunhao.engstudy.ui.icons.AppIcons
+import me.fujunhao.engstudy.ui.screens.AuthScreen
 import me.fujunhao.engstudy.ui.screens.PapersScreen
 import me.fujunhao.engstudy.ui.screens.ProfileScreen
+import me.fujunhao.engstudy.ui.screens.SettingsScreen
 import me.fujunhao.engstudy.ui.screens.TranslateScreen
 import me.fujunhao.engstudy.ui.screens.WordsScreen
+
+private sealed interface AppRoute {
+    data object Root : AppRoute
+    data object Auth : AppRoute
+    data object Settings : AppRoute
+}
 
 @Composable
 fun AppScaffold() {
     var tab by remember { mutableIntStateOf(0) }
+    var route by remember { mutableStateOf<AppRoute>(AppRoute.Root) }
+    BackHandler(enabled = route != AppRoute.Root) { route = AppRoute.Root }
     val useLayer = GlassDebug.useLayer
     val layerBackdrop = rememberLayerBackdrop()
     val staticBackdrop = rememberCanvasBackdrop {
@@ -59,15 +71,33 @@ fun AppScaffold() {
                 .fillMaxSize()
                 .then(if (useLayer) Modifier.layerBackdrop(layerBackdrop) else Modifier),
         ) {
-            when (tab) {
-                0 -> WordsScreen(backdrop)
-                1 -> TranslateScreen(backdrop)
-                2 -> PapersScreen(backdrop)
-                else -> ProfileScreen(backdrop, versionName = me.fujunhao.engstudy.BuildConfig.VERSION_NAME)
+            when (route) {
+                AppRoute.Root -> when (tab) {
+                    0 -> WordsScreen(backdrop)
+                    1 -> TranslateScreen(backdrop)
+                    2 -> PapersScreen(backdrop)
+                    else -> ProfileScreen(
+                        backdrop = backdrop,
+                        versionName = me.fujunhao.engstudy.BuildConfig.VERSION_NAME,
+                        onLogin = { route = AppRoute.Auth },
+                        onSettings = { route = AppRoute.Settings },
+                    )
+                }
+                AppRoute.Auth -> AuthScreen(
+                    backdrop = backdrop,
+                    onBack = { route = AppRoute.Root },
+                    onDone = { route = AppRoute.Root },
+                )
+                AppRoute.Settings -> SettingsScreen(
+                    backdrop = backdrop,
+                    onBack = { route = AppRoute.Root },
+                    onLogin = { route = AppRoute.Auth },
+                    versionName = me.fujunhao.engstudy.BuildConfig.VERSION_NAME,
+                )
             }
         }
 
-        LiquidTabBar(
+        if (route == AppRoute.Root) LiquidTabBar(
             backdrop = backdrop,
             tabs = listOf(
                 LiquidTabSpec(AppIcons.Words, "背词"),
