@@ -65,7 +65,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 4.dp),
             )
         }
-        GlassCard(backdrop) {
+        GlassCard(backdrop, modifier = Modifier.fillMaxWidth()) {
             Text("账号", style = MaterialTheme.typography.titleSmall)
             Text(
                 (ui.sync.email.ifBlank { null }) ?: "未登录",
@@ -86,7 +86,7 @@ fun SettingsScreen(
                 )
             }
         }
-        GlassCard(backdrop) {
+        GlassCard(backdrop, modifier = Modifier.fillMaxWidth()) {
             Text("学习计划", style = MaterialTheme.typography.titleSmall)
             StepperRow(backdrop, "每日新词", dailyGoal, "词", 5, 100, 5) { dailyGoal = it }
             StepperRow(backdrop, "每日句子", sentenceGoal, "句", 1, 10, 1) { sentenceGoal = it }
@@ -99,7 +99,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 16.dp),
             )
         }
-        GlassCard(backdrop) {
+        GlassCard(backdrop, modifier = Modifier.fillMaxWidth()) {
             Text("同步状态", style = MaterialTheme.typography.titleSmall)
             Text(
                 when (ui.sync.status) {

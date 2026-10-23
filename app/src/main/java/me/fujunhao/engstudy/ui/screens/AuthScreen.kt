@@ -68,7 +68,7 @@ fun AuthScreen(
                 modifier = Modifier.padding(top = 4.dp),
             )
         }
-        GlassCard(backdrop) {
+        GlassCard(backdrop, modifier = Modifier.fillMaxWidth()) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GlassPillButton(
                     "注册",

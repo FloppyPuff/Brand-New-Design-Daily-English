@@ -185,9 +185,10 @@ fun LiquidTabBar(
                     shape = { RoundedCornerShape(GlassSpec.BarCorner) },
                     effects = {
                         vibrancy()
-                        blur(10.dp.toPx())
+                        blur(30.dp.toPx())
                         lens(24.dp.toPx(), 24.dp.toPx())
                     },
+                    highlight = { Highlight.Default.copy(alpha = 0.85f) },
                     layerBlock = {
                         val scale = 1f + 16.dp.toPx() / size.width * progress
                         scaleX = scale
@@ -264,7 +265,8 @@ fun LiquidTabBar(
                         scaleY = sy
                     },
                     onDrawSurface = {
-                        drawRect(chipRest, alpha = 1f - progress)
+                        drawRect(accent.copy(alpha = if (dark) 0.16f else 0.10f), alpha = 1f - progress)
+                        drawRect(chipRest, alpha = (1f - progress) * 0.35f)
                         drawRect(Color.Black.copy(alpha = 0.03f * progress))
                     },
                 )

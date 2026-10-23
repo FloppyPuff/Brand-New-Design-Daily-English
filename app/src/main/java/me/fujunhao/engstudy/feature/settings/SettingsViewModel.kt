@@ -14,6 +14,7 @@ import me.fujunhao.engstudy.data.repository.AuthState
 import me.fujunhao.engstudy.data.repository.ProgressRepository
 import me.fujunhao.engstudy.data.repository.SyncManager
 import me.fujunhao.engstudy.data.repository.SyncStatus
+import me.fujunhao.engstudy.data.repository.SyncMode
 import me.fujunhao.engstudy.data.repository.SyncUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -85,12 +86,13 @@ class SettingsViewModel @Inject constructor(
   fun syncNow() {
     viewModelScope.launch {
       sync.syncNow()
-      val status = _state.value.sync.status
+      val snapshot = _state.value.sync
       _state.update {
         it.copy(
-          message = when (status) {
-            SyncStatus.OFFLINE -> "仍然离线，进度已留在本机。"
-            SyncStatus.SIGNED_OUT -> "登录已过期，请重新登录。"
+          message = when {
+            snapshot.mode == SyncMode.ANONYMOUS -> "进度已保存到本机，登录后可跨设备同步。"
+            snapshot.status == SyncStatus.OFFLINE -> "仍然离线，进度已留在本机。"
+            snapshot.status == SyncStatus.SIGNED_OUT -> "登录已过期，请重新登录。"
             else -> "已与账号同步。"
           },
         )

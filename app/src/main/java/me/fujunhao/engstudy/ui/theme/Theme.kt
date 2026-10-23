@@ -1,6 +1,9 @@
 package me.fujunhao.engstudy.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -36,6 +39,14 @@ fun EngStudyTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (dark) DarkColors else LightColors,
         typography = Typography(),
-        content = content,
-    )
+    ) {
+        // MaterialTheme alone does not provide LocalContentColor; without a
+        // Surface the default is black, which disappears in dark mode.
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            content = content,
+        )
+    }
 }
