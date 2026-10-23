@@ -1,0 +1,78 @@
+package me.fujunhao.engstudy.feature.stats
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import me.fujunhao.engstudy.core.learning.LearningEngine
+import me.fujunhao.engstudy.core.learning.Statistics
+import me.fujunhao.engstudy.data.content.ContentRepository
+import me.fujunhao.engstudy.data.content.SentenceDto
+import me.fujunhao.engstudy.data.content.WordDto
+import me.fujunhao.engstudy.data.repository.ProgressRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class StatsUiState(
+  val loading: Boolean = true,
+  val error: String = "",
+  val stats: Statistics? = null,
+)
+
+@HiltViewModel
+class StatsViewModel @Inject constructor(
+  private val contentRepository: ContentRepository,
+  private val progressRepository: ProgressRepository,
+) : ViewModel() {
+  private val _state = MutableStateFlow(StatsUiState())
+  val state: StateFlow<StatsUiState> = _state.asStateFlow()
+  private var words: List<WordDto>? = null
+  private var sentences: List<SentenceDto>? = null
+
+  init {
+    viewModelScope.launch {
+      load()
+    }
+    viewModelScope.launch {
+      progressRepository.state.collect {
+        refresh()
+      }
+    }
+  }
+
+  fun retry() {
+    viewModelScope.launch {
+      _state.update { it.copy(loading = true, error = "") }
+      load()
+    }
+  }
+
+  private suspend fun load() {
+    runCatching {
+      val content = contentRepository.load()
+      words = content.words
+      sentences = content.sentences
+      progressRepository.load()
+      val state = progressRepository.state.value
+      _state.value = StatsUiState(
+        loading = false,
+        stats = LearningEngine.statistics(state, content.words, sentences = content.sentences),
+      )
+    }.onFailure {
+      _state.update { it.copy(loading = false, error = "学习记录读取失败，请重试") }
+    }
+  }
+
+  private fun refresh() {
+    val bank = words ?: return
+    val state = progressRepository.state.value
+    _state.value = _state.value.copy(
+      loading = false,
+      error = "",
+      stats = LearningEngine.statistics(state, bank, sentences = sentences.orEmpty()),
+    )
+  }
+}

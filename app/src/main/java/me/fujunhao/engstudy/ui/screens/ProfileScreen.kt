@@ -11,11 +11,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -23,17 +22,40 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kyant.backdrop.Backdrop
+import me.fujunhao.engstudy.data.repository.SyncStatus
+import me.fujunhao.engstudy.feature.settings.SettingsViewModel
+import me.fujunhao.engstudy.feature.study.StudyViewModel
 import me.fujunhao.engstudy.ui.glass.GlassCard
 import me.fujunhao.engstudy.ui.glass.GlassPillButton
 import me.fujunhao.engstudy.ui.icons.AppIcons
 
 @Composable
-fun ProfileScreen(backdrop: Backdrop, versionName: String = "0.2.0") {
+fun ProfileScreen(
+    backdrop: Backdrop,
+    versionName: String = "0.2.0",
+    studyViewModel: StudyViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
+) {
+    val study by studyViewModel.state.collectAsStateWithLifecycle()
+    val settings by settingsViewModel.state.collectAsStateWithLifecycle()
+    val stats = study.stats
+    val email = settings.sync.email.ifBlank { null }
+    val syncLabel = when (settings.sync.status) {
+        SyncStatus.SAVING -> "同步中…"
+        SyncStatus.DIRTY -> "有未同步改动"
+        SyncStatus.OFFLINE -> "离线"
+        SyncStatus.SIGNED_OUT -> "未登录"
+        SyncStatus.IDLE -> if (settings.sync.lastSyncedAt > 0) "已同步" else "尚未同步"
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -52,19 +74,50 @@ fun ProfileScreen(backdrop: Backdrop, versionName: String = "0.2.0") {
                 )
             }
         }
-        item { AccountCard(backdrop) }
         item {
-            GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
-                EntryRow("学习记录", "累计已学、专注时长与近七天节奏") {}
-                EntryRow("我的笔记", "收藏词句、薄弱与错题") {}
-                EntryRow("复习计划", "到期待复习的单词") {}
+            AccountCard(
+                backdrop = backdrop,
+                email = email,
+                syncing = settings.sync.status == SyncStatus.SAVING,
+                onLogout = settingsViewModel::logout,
+            )
+        }
+        item {
+            GlassCard(backdrop) {
+                Text("学习记录", style = MaterialTheme.typography.titleSmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    StatColumn("已学", stats?.learned ?: 0, "词")
+                    StatColumn("熟悉", stats?.mastered ?: 0, "词")
+                    StatColumn("连续", stats?.streak ?: 0, "天")
+                    StatColumn("专注", stats?.totalMinutes ?: 0, "分")
+                }
             }
         }
         item {
             GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
-                EntryRow("专注计时", "开始一段专注学习") {}
-                EntryRow("同步", "把进度备份到账号") {}
-                EntryRow("设置", "强调色、账号与关于") {}
+                EntryRow("日常词表", "到期 ${stats?.due ?: 0} 词 · 待加固 ${stats?.difficult ?: 0} 词") {}
+                EntryRow("我的笔记", "收藏词句、薄弱与错题（迁移中）") {}
+                EntryRow("复习计划", "到期待复习的单词（迁移中）") {}
+            }
+        }
+        item {
+            GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
+                EntryRow("专注计时", "累计 ${stats?.totalMinutes ?: 0} 分钟（迁移中）") {}
+                EntryRow("同步", syncLabel, settingsViewModel::syncNow)
+                EntryRow("设置", "强调色、账号与关于（迁移中）") {}
+            }
+        }
+        if (settings.message.isNotBlank()) {
+            item {
+                Text(
+                    settings.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                )
             }
         }
         item {
@@ -79,7 +132,12 @@ fun ProfileScreen(backdrop: Backdrop, versionName: String = "0.2.0") {
 }
 
 @Composable
-private fun AccountCard(backdrop: Backdrop) {
+private fun AccountCard(
+    backdrop: Backdrop,
+    email: String?,
+    syncing: Boolean,
+    onLogout: () -> Unit,
+) {
     GlassCard(backdrop) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -96,20 +154,49 @@ private fun AccountCard(backdrop: Backdrop) {
                 )
             }
             Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                Text("未登录", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "登录后学习进度可跨设备同步",
+                    email ?: "未登录",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    if (email != null) "已登录 · 学习进度自动同步" else "登录后学习进度可跨设备同步",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
-        GlassPillButton(
-            text = "登录或注册",
-            onClick = {},
-            backdrop = backdrop,
-            prominent = true,
-            modifier = Modifier.padding(top = 16.dp),
+        if (email == null) {
+            GlassPillButton(
+                text = "登录或注册（迁移中）",
+                onClick = {},
+                backdrop = backdrop,
+                prominent = true,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        } else {
+            GlassPillButton(
+                text = if (syncing) "同步中…" else "退出登录",
+                onClick = onLogout,
+                backdrop = backdrop,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatColumn(label: String, value: Int, unit: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            value.toString(),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            "$label · $unit",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

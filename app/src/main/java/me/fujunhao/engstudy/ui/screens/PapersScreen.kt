@@ -14,64 +14,108 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kyant.backdrop.Backdrop
+import me.fujunhao.engstudy.core.model.AppState
+import me.fujunhao.engstudy.data.content.PaperIndexDto
+import me.fujunhao.engstudy.feature.papers.PapersViewModel
 import me.fujunhao.engstudy.ui.glass.GlassCard
 import me.fujunhao.engstudy.ui.glass.GlassChip
-
-private data class Paper(val year: Int, val kind: String, val status: String)
-
-private val Papers = listOf(
-    Paper(2026, "英语一", "未开始"),
-    Paper(2025, "英语一", "阅读 34/40"),
-    Paper(2024, "英语一", "已二刷"),
-    Paper(2023, "英语一", "已一刷"),
-    Paper(2022, "英语一", "已一刷"),
-    Paper(2021, "英语一", "已一刷"),
-)
+import me.fujunhao.engstudy.ui.glass.GlassPillButton
 
 @Composable
-fun PapersScreen(backdrop: Backdrop) {
+fun PapersScreen(backdrop: Backdrop, viewModel: PapersViewModel = hiltViewModel()) {
+    val ui by viewModel.state.collectAsStateWithLifecycle()
+    val practiced = ui.paperIndex.count { set -> paperDone(ui.progress, set.id) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 120.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 130.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
             Column {
                 Text("考研真题", style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    "完形 / 阅读交互答题 · 翻译接入训练 · 写作浏览",
+                    "${ui.paperIndex.size} 套 · 已练 $practiced 套 · 完形 / 阅读 / 翻译 / 写作",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
         }
-        items(Papers.size) { i -> PaperCard(backdrop, Papers[i]) }
+        when {
+            ui.loadingIndex -> item {
+                GlassCard(backdrop) { Text("正在加载真题…", style = MaterialTheme.typography.bodyLarge) }
+            }
+            ui.indexError.isNotBlank() -> item {
+                GlassCard(backdrop) {
+                    Text(ui.indexError, style = MaterialTheme.typography.bodyLarge)
+                    GlassPillButton(
+                        "重试",
+                        viewModel::loadIndex,
+                        backdrop,
+                        modifier = Modifier.padding(top = 14.dp),
+                    )
+                }
+            }
+            else -> items(ui.paperIndex.size) { index ->
+                PaperCard(backdrop, ui.paperIndex[index], ui.progress)
+            }
+        }
     }
 }
 
+private fun paperDone(progress: AppState, setId: String): Boolean =
+    progress.papers.filterKeys { it.startsWith("$setId#") }.any { (_, record) ->
+        record.total > 0 || record.rating.isNotBlank()
+    }
+
+private fun paperMeta(set: PaperIndexDto): String = listOfNotNull(
+    if (set.questions > 0) "${set.questions} 题" else null,
+    set.counts["cloze"]?.let { "完形 $it" },
+    set.counts["reading"]?.let { "阅读 $it" },
+).joinToString(" · ")
+
 @Composable
-private fun PaperCard(backdrop: Backdrop, paper: Paper) {
+private fun PaperCard(backdrop: Backdrop, set: PaperIndexDto, progress: AppState) {
+    val records = progress.papers.filterKeys { it.startsWith("${set.id}#") }.values
+    val total = records.sumOf { it.total }
+    val correct = records.sumOf { it.correct }
+    val status = when {
+        total > 0 -> "已批改 $correct / $total"
+        records.any { it.rating.isNotBlank() } -> "已理解"
+        else -> "未开始"
+    }
     GlassCard(backdrop) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "${paper.year} ${paper.kind}",
+                "${set.year} ${set.exam}",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f),
             )
             Text(
-                paper.status,
+                status,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (paperMeta(set).isNotBlank()) {
+            Text(
+                paperMeta(set),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
             )
         }
         Row(
