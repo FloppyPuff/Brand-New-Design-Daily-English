@@ -21,15 +21,26 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build debug APK
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build release APK
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --console=plain
+          ./gradlew assembleRelease --no-daemon --console=plain
 
       - uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release-apk
+          path: app/build/outputs/apk/release/*.apk
           retention-days: 14
 
   release:
@@ -38,16 +49,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: app-debug-apk
+          name: app-release-apk
           path: dist
 
       - name: Publish rolling latest release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mv dist/app-debug.apk dist/EngStudy-debug.apk
-          NOTES="Rolling debug build from main. Commit ${GITHUB_SHA}, $(date -u +%Y-%m-%dT%H:%MZ)"
+          mv dist/app-release.apk dist/EngStudy.apk
+          NOTES="Rolling release build from main. Commit ${GITHUB_SHA}, $(date -u +%Y-%m-%dT%H:%MZ)"
           gh release view latest --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
             || gh release create latest --repo "$GITHUB_REPOSITORY" --title "Latest build" --notes "$NOTES"
           gh release edit latest --repo "$GITHUB_REPOSITORY" --notes "$NOTES"
-          gh release upload latest dist/EngStudy-debug.apk --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload latest dist/EngStudy.apk --repo "$GITHUB_REPOSITORY" --clobber
