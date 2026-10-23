@@ -46,6 +46,7 @@ fun ProfileScreen(
     onNotebook: () -> Unit = {},
     onStats: () -> Unit = {},
     onFocus: () -> Unit = {},
+    onReview: () -> Unit = {},
     studyViewModel: StudyViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -106,7 +107,7 @@ fun ProfileScreen(
             GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
                 EntryRow("学习记录", "累计已学、连续天数与近七天节奏") { onStats() }
                 EntryRow("我的笔记", "收藏词句、薄弱与错题") { onNotebook() }
-                EntryRow("复习计划", "到期待复习的单词（迁移中）") {}
+                EntryRow("复习计划", "到期 ${stats?.due ?: 0} 词") { studyViewModel.startSession("review"); onReview() }
             }
         }
         item {

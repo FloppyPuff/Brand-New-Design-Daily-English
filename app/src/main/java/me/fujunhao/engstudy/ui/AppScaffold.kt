@@ -95,6 +95,7 @@ fun AppScaffold() {
                         onNotebook = { route = AppRoute.Notebook },
                         onStats = { route = AppRoute.Stats },
                         onFocus = { route = AppRoute.Focus },
+                        onReview = { tab = 0 },
                     )
                 }
                 AppRoute.Auth -> AuthScreen(
