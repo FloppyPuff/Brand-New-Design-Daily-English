@@ -10,3 +10,4 @@ captures/
 build.log
 shot_*.png
 crop_*.png
+build_release.log
