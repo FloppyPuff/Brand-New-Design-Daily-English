@@ -43,6 +43,8 @@ fun ProfileScreen(
     versionName: String = "0.2.0",
     onLogin: () -> Unit = {},
     onSettings: () -> Unit = {},
+    onNotebook: () -> Unit = {},
+    onStats: () -> Unit = {},
     studyViewModel: StudyViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -101,8 +103,8 @@ fun ProfileScreen(
         }
         item {
             GlassCard(backdrop, contentPadding = PaddingValues(vertical = 6.dp)) {
-                EntryRow("日常词表", "到期 ${stats?.due ?: 0} 词 · 待加固 ${stats?.difficult ?: 0} 词") {}
-                EntryRow("我的笔记", "收藏词句、薄弱与错题（迁移中）") {}
+                EntryRow("学习记录", "累计已学、连续天数与近七天节奏") { onStats() }
+                EntryRow("我的笔记", "收藏词句、薄弱与错题") { onNotebook() }
                 EntryRow("复习计划", "到期待复习的单词（迁移中）") {}
             }
         }

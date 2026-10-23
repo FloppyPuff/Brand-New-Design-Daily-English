@@ -29,10 +29,12 @@ import me.fujunhao.engstudy.ui.glass.LiquidTabBar
 import me.fujunhao.engstudy.ui.glass.LiquidTabSpec
 import me.fujunhao.engstudy.ui.icons.AppIcons
 import me.fujunhao.engstudy.ui.screens.AuthScreen
+import me.fujunhao.engstudy.ui.screens.NotebookScreen
 import me.fujunhao.engstudy.ui.screens.PaperPracticeScreen
 import me.fujunhao.engstudy.ui.screens.PapersScreen
 import me.fujunhao.engstudy.ui.screens.ProfileScreen
 import me.fujunhao.engstudy.ui.screens.SettingsScreen
+import me.fujunhao.engstudy.ui.screens.StatsScreen
 import me.fujunhao.engstudy.ui.screens.TranslateScreen
 import me.fujunhao.engstudy.ui.screens.WordsScreen
 
@@ -41,6 +43,8 @@ private sealed interface AppRoute {
     data object Auth : AppRoute
     data object Settings : AppRoute
     data class Practice(val setId: String) : AppRoute
+    data object Notebook : AppRoute
+    data object Stats : AppRoute
 }
 
 @Composable
@@ -86,6 +90,8 @@ fun AppScaffold() {
                         versionName = me.fujunhao.engstudy.BuildConfig.VERSION_NAME,
                         onLogin = { route = AppRoute.Auth },
                         onSettings = { route = AppRoute.Settings },
+                        onNotebook = { route = AppRoute.Notebook },
+                        onStats = { route = AppRoute.Stats },
                     )
                 }
                 AppRoute.Auth -> AuthScreen(
@@ -101,6 +107,14 @@ fun AppScaffold() {
                         onBack = { route = AppRoute.Root },
                     )
                 }
+                AppRoute.Notebook -> NotebookScreen(
+                    backdrop = backdrop,
+                    onBack = { route = AppRoute.Root },
+                )
+                AppRoute.Stats -> StatsScreen(
+                    backdrop = backdrop,
+                    onBack = { route = AppRoute.Root },
+                )
                 AppRoute.Settings -> SettingsScreen(
                     backdrop = backdrop,
                     onBack = { route = AppRoute.Root },

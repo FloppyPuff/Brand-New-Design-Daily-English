@@ -85,6 +85,8 @@ fun WordsScreen(backdrop: Backdrop, viewModel: StudyViewModel = hiltViewModel())
                         total = ui.wordQueue.size,
                         onReveal = viewModel::revealWord,
                         onRate = viewModel::rateWord,
+                        saved = ui.progress.savedWords.contains(word.id),
+                        onToggleSave = { viewModel.toggleSavedWord(word.id) },
                     )
                 }
                 items(upcoming.size) { index ->
@@ -131,6 +133,8 @@ private fun ReviewCard(
     total: Int,
     onReveal: () -> Unit,
     onRate: (String) -> Unit,
+    saved: Boolean,
+    onToggleSave: () -> Unit,
 ) {
     GlassCard(backdrop) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -140,11 +144,21 @@ private fun ReviewCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
-            Text(
-                word.pos.orEmpty(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    word.pos.orEmpty(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    if (saved) "已收藏" else "收藏",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (saved) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .clickable(onClick = onToggleSave),
+                )
+            }
         }
         Text(
             word.id,
