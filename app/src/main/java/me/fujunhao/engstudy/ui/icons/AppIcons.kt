@@ -66,6 +66,23 @@ object AppIcons {
         }
     }
 
+    val Profile: ImageVector = vector("profile") {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(12f, 3.5f)
+            curveTo(14.5f, 3.5f, 16.5f, 5.5f, 16.5f, 8f)
+            curveTo(16.5f, 10.5f, 14.5f, 12.5f, 12f, 12.5f)
+            curveTo(9.5f, 12.5f, 7.5f, 10.5f, 7.5f, 8f)
+            curveTo(7.5f, 5.5f, 9.5f, 3.5f, 12f, 3.5f)
+            close()
+            moveTo(4.5f, 20.5f)
+            curveTo(4.5f, 16.6f, 7.9f, 14.3f, 12f, 14.3f)
+            curveTo(16.1f, 14.3f, 19.5f, 16.6f, 19.5f, 20.5f)
+            lineTo(19.5f, 21f)
+            lineTo(4.5f, 21f)
+            close()
+        }
+    }
+
     val Plus: ImageVector = vector("plus") {
         path(fill = SolidColor(Color.Black)) {
             moveTo(11f, 5f)

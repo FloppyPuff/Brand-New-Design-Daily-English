@@ -11,3 +11,9 @@ build.log
 shot_*.png
 crop_*.png
 build_release.log
+
+# Corpus copied into assets by the syncContent Gradle task
+app/src/main/assets/content/
+
+# JVM crash dumps
+*.hprof

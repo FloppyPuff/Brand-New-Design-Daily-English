@@ -23,10 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberCanvasBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import me.fujunhao.engstudy.ui.glass.GlassTabBar
-import me.fujunhao.engstudy.ui.glass.TabSpec
+import me.fujunhao.engstudy.ui.glass.LiquidTabBar
+import me.fujunhao.engstudy.ui.glass.LiquidTabSpec
 import me.fujunhao.engstudy.ui.icons.AppIcons
 import me.fujunhao.engstudy.ui.screens.PapersScreen
+import me.fujunhao.engstudy.ui.screens.ProfileScreen
 import me.fujunhao.engstudy.ui.screens.TranslateScreen
 import me.fujunhao.engstudy.ui.screens.WordsScreen
 
@@ -61,23 +62,25 @@ fun AppScaffold() {
             when (tab) {
                 0 -> WordsScreen(backdrop)
                 1 -> TranslateScreen(backdrop)
-                else -> PapersScreen(backdrop)
+                2 -> PapersScreen(backdrop)
+                else -> ProfileScreen(backdrop, versionName = me.fujunhao.engstudy.BuildConfig.VERSION_NAME)
             }
         }
 
-        GlassTabBar(
+        LiquidTabBar(
             backdrop = backdrop,
             tabs = listOf(
-                TabSpec(AppIcons.Words, "背词"),
-                TabSpec(AppIcons.Translate, "翻译"),
-                TabSpec(AppIcons.Papers, "真题"),
+                LiquidTabSpec(AppIcons.Words, "背词"),
+                LiquidTabSpec(AppIcons.Translate, "翻译"),
+                LiquidTabSpec(AppIcons.Papers, "真题"),
+                LiquidTabSpec(AppIcons.Profile, "我的"),
             ),
             selected = tab,
             onSelect = { tab = it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 40.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 12.dp),
         )
     }
 }

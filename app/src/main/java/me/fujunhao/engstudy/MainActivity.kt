@@ -6,11 +6,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.core.view.WindowInsetsControllerCompat
 import me.fujunhao.engstudy.ui.AppScaffold
 import me.fujunhao.engstudy.ui.GlassDebug
 import me.fujunhao.engstudy.ui.theme.EngStudyTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
